@@ -1,3 +1,5 @@
+dist/
+releases/
 log/
 *.exe
 *.dll

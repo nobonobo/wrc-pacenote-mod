@@ -6,7 +6,7 @@ COMMIT_HASH := $(shell git rev-parse --short HEAD)
 # バージョン名にコミットハッシュ値を付加
 VERSION := $(VERSION)-$(COMMIT_HASH)
 
-NAME=$(basename $(shell go list .))
+NAME=$(notdir $(shell go list .))
 OUTPUT=$(NAME)-$(VERSION).zip
 
 build:
@@ -22,9 +22,9 @@ depends:
 	cp voicevox_core/onnxruntime.dll ./
 
 pack: build
-	mkdir -p dist
+	mkdir -p dist releases
 	cp -Rf voicevox_core dist/voicevox_core
 	cp onnxruntime.dll dist/onnxruntime.dll
 	cp wrc-pacenote-mod.exe dist/
 	cp base.json dist/base.json
-	powershell Compress-Archive -Path dist -Force -DestinationPath $(OUTPUT)
+	powershell Compress-Archive -Path dist -Force -DestinationPath releases/$(OUTPUT)
