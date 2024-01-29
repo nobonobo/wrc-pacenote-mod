@@ -1,0 +1,13 @@
+<svg width="512px" height="512px"
+     viewBox="-50000 -50000 100000 100000"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+<style>
+line {stroke:black;stroke-width:100}
+</style>
+<g id="0">
+<line x1="32734" y1="-30486" x2="36734" y2="-33734" />
+<line x1="36734" y1="-36734" x2="30486" y2="-31486" />
+<line x1="30486" y1="-31486" x2="32734" y2="-34734" />
+</g>
+</svg>
