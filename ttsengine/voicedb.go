@@ -3,10 +3,13 @@ package ttsengine
 import (
 	"encoding/json"
 	"flag"
+	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/aethiopicuschan/nanoda"
+	"github.com/nobonobo/wrc-pacenote-mod/config"
 )
 
 var (
@@ -43,10 +46,37 @@ var (
 	Dict map[string]AQ
 )
 
+func fileCopy(srcName, dstName string) error {
+	src, err := os.Open(srcName) // コピー元ファイルを開く
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	dst, err := os.Create(dstName) // コピー先ファイルを作成する
+	if err != nil {
+		return err
+	}
+	defer dst.Close()
+	_, err = io.Copy(dst, src) // ファイルの中身をコピーする
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func init() {
-	log.Println("loading base.json")
-	defer log.Println("base.json loaded")
-	fp, err := os.Open("base.json")
+	fpath := filepath.Join(config.Config.LogDir, "dictionary.json")
+	if _, err := os.Stat(fpath); err != nil {
+		if !os.IsNotExist(err) {
+			log.Fatal(err)
+		}
+		if err := fileCopy(filepath.Join(config.Config.Root, "base.json"), fpath); err != nil {
+			log.Fatal(err)
+		}
+	}
+	log.Println("loading dictionary.json")
+	defer log.Println("dictionary.json loading completed")
+	fp, err := os.Open(fpath)
 	if err != nil {
 		log.Fatal(err)
 	}

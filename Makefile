@@ -19,7 +19,6 @@ run:
 depends:
 	curl -LO https://github.com/VOICEVOX/voicevox_core/releases/download/0.15.0-preview.13/download-windows-x64.exe
 	download-windows-x64.exe --device cpu --version 0.15.0-preview.13
-	cp voicevox_core/onnxruntime.dll ./
 
 pack: build
 	mkdir -p dist releases

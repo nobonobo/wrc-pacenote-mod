@@ -33,10 +33,11 @@ func playback(ctxOto *oto.Context, s nanoda.Synthesizer, q nanoda.AudioQuery) er
 }
 
 func StartEngine(ctx context.Context, ctxOto *oto.Context, in <-chan string) error {
+	coreDir := filepath.Join(config.Config.Root, "voicevox_core")
 	v, err := nanoda.NewVoicevox(
-		filepath.Join(config.Config.VoiceVoxDir, "voicevox_core.dll"),
-		filepath.Join(config.Config.VoiceVoxDir, "open_jtalk_dic_utf_8-1.11"),
-		filepath.Join(config.Config.VoiceVoxDir, "model"))
+		filepath.Join(coreDir, "voicevox_core.dll"),
+		filepath.Join(coreDir, "open_jtalk_dic_utf_8-1.11"),
+		filepath.Join(coreDir, "model"))
 	if err != nil {
 		return err
 	}
