@@ -23,7 +23,6 @@ depends:
 pack: build
 	mkdir -p dist releases
 	cp -Rf voicevox_core dist/voicevox_core
-	cp onnxruntime.dll dist/onnxruntime.dll
 	cp wrc-pacenote-mod.exe dist/
 	cp base.json dist/base.json
 	powershell Compress-Archive -Path dist -Force -DestinationPath releases/$(OUTPUT)
