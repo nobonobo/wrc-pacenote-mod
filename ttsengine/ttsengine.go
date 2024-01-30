@@ -32,6 +32,8 @@ func playback(ctxOto *oto.Context, s nanoda.Synthesizer, q nanoda.AudioQuery) er
 	return nil
 }
 
+var dictionary = map[string]nanoda.AudioQuery{}
+
 func StartEngine(ctx context.Context, ctxOto *oto.Context, in <-chan string) error {
 	coreDir := filepath.Join(config.Config.Root, "voicevox_core")
 	v, err := nanoda.NewVoicevox(
@@ -48,10 +50,11 @@ func StartEngine(ctx context.Context, ctxOto *oto.Context, in <-chan string) err
 	if err := s.LoadModelsFromStyleId(nanoda.StyleId(ActorID)); err != nil {
 		return err
 	}
-	qDicts, err := Init(s, Dict)
+	d, err := Init(s, Dict)
 	if err != nil {
 		return err
 	}
+	dictionary = d
 	log.Println("TTS Engine started")
 	defer log.Println("TTS Engine stopped")
 	for {
@@ -63,12 +66,13 @@ func StartEngine(ctx context.Context, ctxOto *oto.Context, in <-chan string) err
 				if v == "unknown" {
 					continue
 				}
-				qm, ok := qDicts[v]
+				qm, ok := dictionary[v]
 				if !ok {
 					q, err := makeAudioQuery(s, v)
 					if err != nil {
 						return err
 					}
+					dictionary[v] = q
 					qm = q
 				}
 				if err := playback(ctxOto, s, qm); err != nil {

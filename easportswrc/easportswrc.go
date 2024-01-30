@@ -693,56 +693,56 @@ var (
 		10414.5029296875: {13, 10}, // Cabanella
 		11520.50390625:   {13, 11}, // Moltifao
 		// 14:Pacifico ------------------------------------------------------------
-		//0 Talao
-		//1 Talanghilirair
-		//2 SungaiKunit
-		//3 Sangir Balai Janggo
-		//4 South Solok
-		//5 Kebun Raya Solok
-		//6 Batukangkung
-		5712.67041015625: {14, 7}, // Abai
-		6709.298828125:   {14, 8}, // Moearaikoer
-		8058.00634765625: {14, 9}, // Bidaralam
-		//10 Loeboekmalaka
-		9444.4287109375: {14, 11}, // Gunung Tujuh
+		31759.525391:     {14, 0},  // Talao
+		32729.640625:     {14, 1},  // Talanghilirair
+		14928.204102:     {14, 2},  // SungaiKunit
+		15890.509766:     {14, 3},  // Sangir Balai Janggo
+		17184.585938:     {14, 4},  // South Solok
+		9023.762695:      {14, 5},  // Kebun Raya Solok
+		9079.655273:      {14, 6},  // Batukangkung
+		5712.67041015625: {14, 7},  // Abai
+		6709.298828125:   {14, 8},  // Moearaikoer
+		8058.00634765625: {14, 9},  // Bidaralam
+		8046.633301:      {14, 10}, // Loeboekmalaka
+		9444.4287109375:  {14, 11}, // Gunung Tujuh
 		// 15:Oceania -------------------------------------------------------------
-		11336.53125: {15, 0}, // Oakleigh
-		//1 Doctors Hill
-		7023.32177734375: {15, 2}, // none: Mangapai
-		6983.908203125:   {15, 3}, // Brynderwyn
-		4719.359863:      {15, 4}, // Taipuha
-		//5 Mareretu
-		//6 Waiwera
-		//7 Tahekeroa
-		//8 Noakes Hill
-		9625.2822265625: {15, 9},  // Orewa
-		8901.7470703125: {15, 10}, // Tahekeroa - Orewa
-		//11 Makarau
+		11336.53125:      {15, 0},  // Oakleigh
+		11341.740234:     {15, 1},  // Doctors Hill
+		7023.32177734375: {15, 2},  // Mangapai
+		6983.908203125:   {15, 3},  // Brynderwyn
+		4719.359863:      {15, 4},  // Taipuha
+		4698.243164:      {15, 5},  // Mareretu
+		18381.791016:     {15, 6},  // Waiwera
+		18045.710938:     {15, 7},  // Tahekeroa
+		9863.051758:      {15, 8},  // Noakes Hill
+		9625.2822265625:  {15, 9},  // Orewa
+		8901.7470703125:  {15, 10}, // Tahekeroa - Orewa
+		8987.585938:      {15, 11}, // Makarau
 		// 16:Scandia -------------------------------------------------------------
-		31230.755859375: {16, 0}, // Holtjønn
-		32164.1796875:   {16, 1}, // Hengeltjønn
-		17404.24609375:  {16, 2}, // Fyresvatn
-		//3 Russvatn
-		//4 Tovsli
-		//5 Kottjønn
-		//6 Fordol
-		5756.9423828125: {16, 7}, // Fyresdal
-		//8 Ljosdalstjønn
-		//9 Dagtrolltjønn
-		//10 Tovslioytjorn
-		//11 Bergsøytjønn
+		31230.755859375: {16, 0},  // Holtjønn
+		32164.1796875:   {16, 1},  // Hengeltjønn
+		17404.24609375:  {16, 2},  // Fyresvatn
+		17145.505859:    {16, 3},  // Russvatn
+		14050.787109:    {16, 4},  // Tovsli
+		6937.629883:     {16, 5},  // Kottjønn
+		6382.789551:     {16, 6},  // Fordol
+		5756.9423828125: {16, 7},  // Fyresdal
+		9702.848633:     {16, 8},  // Ljosdalstjønn
+		9580.297852:     {16, 9},  // Dagtrolltjønn
+		7820.630859:     {16, 10}, // Tovslioytjorn
+		7623.759766:     {16, 11}, // Bergsøytjønn
 		// 17:Iberia --------------------------------------------------------------
-		19315.458984375: {17, 0}, // Santes Creus
-		//1 Valldossera
-		10071.61328125:  {17, 2}, // Campdasens
-		10075.623046875: {17, 3}, // Pontils
-		//4 Montagut
-		//5 Aiguamúrcia
-		//6 Alforja
-		//7 Les Irles
-		//8 L'Argentera
-		//9 Les Voltes
-		//10 Montclar
+		19315.458984375:  {17, 0},  // Santes Creus
+		19315.480469:     {17, 1},  // Valldossera
+		10071.61328125:   {17, 2},  // Campdasens
+		10075.623046875:  {17, 3},  // Pontils
+		9583.832031:      {17, 4},  // Montagut
+		9591.928711:      {17, 5},  // Aiguamúrcia
+		16637.242188:     {17, 6},  // Alforja
+		16619.099609:     {17, 7},  // Les Irles
+		9282.355469:      {17, 8},  // L'Argentera
+		9282.786133:      {17, 9},  // Les Voltes
+		7665.740723:      {17, 10}, // Montclar
 		7663.49072265625: {17, 11}, // Botareli
 	}
 )
