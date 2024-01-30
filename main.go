@@ -439,11 +439,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	speechCh := make(chan string, 10)
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		<-signalChan
 		cancel()
+		close(speechCh)
 	}()
 	wg.Add(1)
 	go func() {
@@ -453,7 +456,6 @@ func main() {
 		}
 	}()
 
-	speechCh := make(chan string, 10)
 	go receiver(speechCh)(ctx)
 
 	for {
