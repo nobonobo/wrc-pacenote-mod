@@ -1,4 +1,4 @@
-//go:build release
+//go:build !develop
 
 package main
 
@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 )
+
+//go:generate sh -c "cd frontend && npm run build"
 
 //go:embed all:frontend/build/*
 var assets embed.FS

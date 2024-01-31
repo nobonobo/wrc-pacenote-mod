@@ -207,7 +207,7 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 	}
 }
 
-type Record struct {
+type Pacenote struct {
 	ID      int     `json:"id"`
 	Message string  `json:"message"`
 	X       float64 `json:"x"`
@@ -272,7 +272,7 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 					log.Println(err)
 					continue
 				}
-				if err := tree.Set(&Record{
+				if err := tree.Set(&Pacenote{
 					ID: index, Message: message,
 					X: x, Y: y, Z: z,
 				}, x+half, y+half, z+half); err != nil {
@@ -301,9 +301,9 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 		if len(find) == 0 {
 			return nil
 		}
-		records := make([]*Record, 0, len(find))
+		records := make([]*Pacenote, 0, len(find))
 		for _, v := range find {
-			records = append(records, v.(*Record))
+			records = append(records, v.(*Pacenote))
 		}
 		sort.Slice(records, func(i, j int) bool {
 			return records[i].ID < records[j].ID

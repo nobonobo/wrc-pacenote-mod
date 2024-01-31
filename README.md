@@ -53,13 +53,26 @@ wrc-pacenote-mod -log-dir ログ保管フォルダパス
     .
     .
     .
-    +-- ##.ロケーション名##
-    | +-- capture.wav (キャプチャ音声)
-    | +-- telemetry.log (座標ログ)
-    | +-- regeions.log （編集マーキングデータ）
-    | +-- pacenote.log （生成ペースノート）
+    +-- ##.ロケーション名
+    | +-- ##.ステージ名
+    |   +-- capture.wav (キャプチャ音声)
+    |   +-- telemetry.log (座標ログ)
+    |   +-- regeions.log （編集マーキングデータ）
+    |   +-- pacenote.log （生成ペースノート）
     +-- dictionary.json （発声単語辞書）
 ```
+
+各ステージにあるファイルは４種
+
+- capture.wav (キャプチャ音声)
+- telemetry.log (座標ログ)
+- regeions.log （編集マーキングデータ）
+- pacenote.log （生成ペースノート）
+
+このうち、唯一「pacenote.log」がペースノート再生に必要なファイルです。
+編集をもうしないのならほかのファイルを削除しても動作します。
+「regeions.log」を編集するときはもとになる「capture.wav」「telemetry.log」が必要です。
+「regeions.log」の編集を始めたら「capture.wav」「telemetry.log」の名前変更や内容の書き換えをしないようにしてください。
 
 ## 利用方法
 
