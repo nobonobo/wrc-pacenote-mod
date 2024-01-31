@@ -3,6 +3,7 @@ package easportswrc
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"math"
 )
 
@@ -509,7 +510,7 @@ var (
 			"Botareli",
 		}},
 	}
-	Stages = map[float64]StageID{
+	stages = map[float32]StageID{
 		// 0:Monte-Carlo ----------------------------------------------------------
 		18799.8984375:    {0, 0},  // La Bollène-Vésubie - Peïra Cava
 		18606.03125:      {0, 1},  // Peïra Cava - La Bollène-Vésubie
@@ -748,7 +749,8 @@ var (
 )
 
 func GetStage(sd float64) *Stage {
-	s, ok := Stages[sd]
+	s, ok := stages[float32(sd)]
+	log.Printf("GetStage: %f %v %v", sd, s, ok)
 	if ok {
 		loc := Location{Name: "unknown", Stages: nil}
 		if s.Location >= 0 && s.Location < len(Locations) {
