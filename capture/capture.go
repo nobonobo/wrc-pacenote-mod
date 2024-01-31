@@ -154,9 +154,11 @@ func Capture(ctx context.Context, output func(Chunk)) error {
 	if err := rac.Start(); err != nil {
 		return err
 	}
+	defer rac.Stop()
 	if err := cac.Start(); err != nil {
 		return err
 	}
+	defer cac.Stop()
 
 	log.Println("Start loopback capturing with shared event driven mode")
 
@@ -223,15 +225,7 @@ func Capture(ctx context.Context, output func(Chunk)) error {
 			}
 		}
 	}
-
 	log.Println("Stop capturing")
-	if err := cac.Stop(); err != nil {
-		return err
-	}
-	if err := rac.Stop(); err != nil {
-		return err
-	}
-
 	return nil
 }
 
