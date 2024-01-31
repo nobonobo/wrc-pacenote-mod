@@ -133,13 +133,13 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 			setCurrent(0)
 			logFile = bytes.NewBuffer(nil)
 			closeFuncs = append(closeFuncs, func() {
-				logFile = nil
 				if getFinished() {
 					os.WriteFile(logName, logFile.Bytes(), 0o644)
 					log.Printf("log saved: %q", logName)
 				} else {
 					log.Print("log save skiiped")
 				}
+				logFile = nil
 			})
 			ctx, cancel := context.WithCancel(ctx)
 			closeFuncs = append(closeFuncs, cancel)
