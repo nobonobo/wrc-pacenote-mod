@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -33,7 +34,7 @@ import (
 func getLogDir(stageLength float64) string {
 	stage := easportswrc.GetStage(stageLength)
 	if stage == nil {
-		return filepath.Join(config.Config.LogDir, fmt.Sprintf("%f.log", stageLength))
+		return filepath.Join(config.Config.LogDir, fmt.Sprintf("%f", stageLength))
 	}
 	return filepath.Join(config.Config.LogDir,
 		fmt.Sprintf("%02d.%s", stage.ID.Location, stage.Location),
@@ -87,7 +88,7 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 	closer := func() {}
 	closeFuncs := []func(){}
 	logDir := ""
-	logFile := (*os.File)(nil)
+	logFile := (*bytes.Buffer)(nil)
 	wavFile := (*wav.File)(nil)
 	lastDistance := float64(100000)
 	timeout := (*time.Timer)(nil)
@@ -114,6 +115,7 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 		}
 		if lastDistance != 0.0 && pkt.StageCurrentDistance == 0 {
 			finishCnt = 0
+			setFinished(false)
 			if closer != nil {
 				closer()
 			}
@@ -127,17 +129,17 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 			logName := filepath.Join(logDir, "telemetry.log")
 			os.MkdirAll(logDir, 0755)
 			logName = uniqueRename(logName)
-			fp, err := os.Create(logName)
-			if err != nil {
-				return err
-			}
 			log.Printf("logger (re)start: %q", logName)
 			setCurrent(0)
-			logFile = fp
+			logFile = bytes.NewBuffer(nil)
 			closeFuncs = append(closeFuncs, func() {
-				logFile.Close()
 				logFile = nil
-				log.Printf("log closed: %q", logName)
+				if getFinished() {
+					os.WriteFile(logName, logFile.Bytes(), 0o644)
+					log.Printf("log saved: %q", logName)
+				} else {
+					log.Print("log save skiiped")
+				}
 			})
 			ctx, cancel := context.WithCancel(ctx)
 			closeFuncs = append(closeFuncs, cancel)
@@ -170,12 +172,16 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 							}
 							wavName := filepath.Join(logDir, "capture.wav")
 							wavName = uniqueRename(wavName)
-							if err := os.WriteFile(wavName, b, 0644); err != nil {
-								log.Println(err)
-								return
+							if getFinished() {
+								if err := os.WriteFile(wavName, b, 0644); err != nil {
+									log.Println(err)
+									return
+								}
+								log.Printf("wav saved: %q", wavName)
+							} else {
+								log.Println("wav save skipped")
 							}
 							wavFile = nil
-							log.Println("wav closed:", wavName)
 						})
 					}
 					if _, err := wavFile.Write(v.Buffer); err != nil {
