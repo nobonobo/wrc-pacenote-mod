@@ -16,13 +16,8 @@ build:
 run:
 	go run -tags develop .
 
-depends:
-	curl -LO https://github.com/VOICEVOX/voicevox_core/releases/download/0.15.0-preview.13/download-windows-x64.exe
-	download-windows-x64.exe --device cpu --version 0.15.0-preview.13
-
 sync: build
 	mkdir -p dist releases
-	cp -Rf voicevox_core dist/voicevox_core
 	cp wrc-pacenote-mod.exe dist/
 	cp base.json dist/base.json
 
