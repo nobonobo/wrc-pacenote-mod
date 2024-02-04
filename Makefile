@@ -4,10 +4,10 @@ VERSION := $(shell git describe --tags --abbrev=0)
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
 
 # バージョン名にコミットハッシュ値を付加
-VERSION := $(VERSION)-$(COMMIT_HASH)
+LONG_VERSION := $(VERSION)-$(COMMIT_HASH)
 
 NAME=$(notdir $(shell go list .))
-OUTPUT=$(NAME)-$(VERSION).zip
+OUTPUT=$(NAME)-$(LONG_VERSION).zip
 
 build:
 	go generate .
@@ -17,11 +17,11 @@ run:
 	go run -tags develop .
 
 sync: build
-	mkdir -p dist releases
-	cp wrc-pacenote-mod.exe dist/
+	mkdir -p dist/$(VERSION)
+	cp wrc-pacenote-mod.exe dist/$(VERSION)/
 
 archive:
 	mkdir -p releases
-	powershell Compress-Archive -Path dist\\\* -Force -DestinationPath releases/$(OUTPUT)
+	powershell Compress-Archive -Path dist\\$(VERSION) -Force -DestinationPath releases/$(OUTPUT)
 
 pack: sync archive
