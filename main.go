@@ -98,7 +98,7 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 		if pkt == nil {
 			return false
 		}
-		finish := pkt.StageCurrentDistance > 1000 && pkt.VehicleClutch == 1.0 && pkt.VehicleBrake == 1.0
+		finish := pkt.StageCurrentDistance > pkt.StageLength-1000 && pkt.VehicleClutch == 1.0 && pkt.VehicleBrake == 1.0
 		if finish {
 			finishCnt++
 		}
@@ -106,9 +106,9 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 	}
 	return func(ctx context.Context, pkt *easportswrc.PacketEASportsWRC) error {
 		defer func() {
-			setFinished(isFinished(lastPacket))
 			lastPacket = pkt
 			lastDistance = pkt.StageCurrentDistance
+			setFinished(isFinished(lastPacket))
 		}()
 		if pkt.PacketUid%500 == 0 {
 			log.Printf("packet: %v", pkt)
@@ -191,6 +191,7 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 				}
 				if err := capture.Capture(ctx, output); err != nil {
 					log.Println(err)
+					return
 				}
 			}(ctx)
 		}

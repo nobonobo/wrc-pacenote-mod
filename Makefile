@@ -17,11 +17,12 @@ run:
 	go run -tags develop .
 
 sync: build
-	mkdir -p dist/$(VERSION)
-	cp wrc-pacenote-mod.exe dist/$(VERSION)/
+	mkdir -p dist/
+	cp wrc-pacenote-mod.exe dist/
+	cp README.md  dist/
 
 archive:
 	mkdir -p releases
-	powershell Compress-Archive -Path dist\\$(VERSION) -Force -DestinationPath releases/$(OUTPUT)
+	powershell Compress-Archive -Path dist\\\* -Force -DestinationPath releases/$(OUTPUT)
 
 pack: sync archive
