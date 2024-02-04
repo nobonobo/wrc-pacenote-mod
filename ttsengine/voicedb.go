@@ -1,9 +1,9 @@
 package ttsengine
 
 import (
+	_ "embed"
 	"encoding/json"
 	"flag"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -46,19 +46,19 @@ var (
 	Dict map[string]AQ
 )
 
-func fileCopy(srcName, dstName string) error {
-	src, err := os.Open(srcName) // コピー元ファイルを開く
-	if err != nil {
-		return err
-	}
-	defer src.Close()
+//go:embed base.json
+var base []byte
+
+func writeDictionary(dstName string) error {
 	dst, err := os.Create(dstName) // コピー先ファイルを作成する
 	if err != nil {
 		return err
 	}
 	defer dst.Close()
-	_, err = io.Copy(dst, src) // ファイルの中身をコピーする
-	if err != nil {
+	if _, err := dst.Write(base); err != nil {
+		return err
+	}
+	if err := dst.Sync(); err != nil {
 		return err
 	}
 	return nil
@@ -70,7 +70,7 @@ func init() {
 		if !os.IsNotExist(err) {
 			log.Fatal(err)
 		}
-		if err := fileCopy(filepath.Join(config.Config.Root, "base.json"), fpath); err != nil {
+		if err := writeDictionary(fpath); err != nil {
 			log.Fatal(err)
 		}
 	}

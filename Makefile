@@ -19,7 +19,6 @@ run:
 sync: build
 	mkdir -p dist releases
 	cp wrc-pacenote-mod.exe dist/
-	cp base.json dist/base.json
 
 archive:
 	mkdir -p releases

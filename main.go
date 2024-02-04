@@ -102,7 +102,7 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 		if finish {
 			finishCnt++
 		}
-		return finishCnt > 10
+		return finishCnt > 3
 	}
 	return func(ctx context.Context, pkt *easportswrc.PacketEASportsWRC) error {
 		defer func() {
