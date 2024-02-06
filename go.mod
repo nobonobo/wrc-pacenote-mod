@@ -11,10 +11,12 @@ require (
 	github.com/hajimehoshi/ebiten/v2 v2.6.4
 	github.com/moutend/go-wav v0.0.0-20170820031854-56127fbbb7ba
 	github.com/moutend/go-wca v0.3.0
+	golang.org/x/sys v0.13.0
 )
 
 require (
 	github.com/ebitengine/purego v0.5.0 // indirect
 	github.com/google/uuid v1.3.1 // indirect
-	golang.org/x/sys v0.13.0 // indirect
 )
+
+replace github.com/aethiopicuschan/nanoda => github.com/nobonobo/nanoda v0.0.0-20240206001753-a844a78aa463
