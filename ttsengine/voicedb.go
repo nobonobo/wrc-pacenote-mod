@@ -50,6 +50,7 @@ var (
 var base []byte
 
 func writeDictionary(dstName string) error {
+	os.MkdirAll(filepath.Dir(dstName), 0777)
 	dst, err := os.Create(dstName) // コピー先ファイルを作成する
 	if err != nil {
 		return err
