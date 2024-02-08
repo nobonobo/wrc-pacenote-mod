@@ -1,6 +1,6 @@
 module github.com/nobonobo/wrc-pacenote-mod
 
-go 1.21.6
+go 1.22
 
 require (
 	github.com/aethiopicuschan/nanoda v0.0.2

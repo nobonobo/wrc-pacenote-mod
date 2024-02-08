@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"runtime"
 	"time"
 	"unsafe"
 
@@ -23,11 +24,17 @@ type Chunk struct {
 	Buffer          []byte
 }
 
+var oleInitialized = false
+
 func Capture(ctx context.Context, output func(Chunk)) error {
-	if err := ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED); err != nil {
-		return err
+	runtime.LockOSThread()
+	if !oleInitialized {
+		if err := ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED); err != nil {
+			return err
+		}
+		//defer ole.CoUninitialize()
+		oleInitialized = true
 	}
-	defer ole.CoUninitialize()
 
 	var mmdCapturee *wca.IMMDeviceEnumerator
 	if err := wca.CoCreateInstance(wca.CLSID_MMDeviceEnumerator, 0, wca.CLSCTX_ALL, wca.IID_IMMDeviceEnumerator, &mmdCapturee); err != nil {

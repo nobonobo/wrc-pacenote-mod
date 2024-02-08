@@ -66,7 +66,7 @@ func uniqueRename(fpath string) string {
 	}
 }
 
-func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
+func logging(speechCh chan<- string) func(context.Context, *easportswrc.PacketEASportsWRC) error {
 	currentDuration := uint64(0)
 	setCurrent := func(v time.Duration) {
 		atomic.StoreUint64(&currentDuration, uint64(v))
@@ -189,10 +189,15 @@ func logging() func(context.Context, *easportswrc.PacketEASportsWRC) error {
 						return
 					}
 				}
-				if err := capture.Capture(ctx, output); err != nil {
-					log.Println(err)
+				for range 3 {
+					if err := capture.Capture(ctx, output); err != nil {
+						log.Println(err)
+						time.Sleep(500 * time.Millisecond)
+						continue
+					}
 					return
 				}
+				speechCh <- "キャプチャーに失敗しました"
 			}(ctx)
 		}
 		if logFile != nil && isChange(lastPacket, pkt) {
@@ -351,7 +356,7 @@ func receiver(speechCh chan<- string) func(ctx context.Context) {
 			<-ctx.Done()
 			conn.Close()
 		}()
-		recording := logging()
+		recording := logging(speechCh)
 		playback := normal(speechCh)
 		recodingMode := false
 		buf := make([]byte, 4096)
