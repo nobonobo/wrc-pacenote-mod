@@ -16,6 +16,9 @@ build:
 run:
 	go run -tags develop .
 
+install:
+	go install .
+
 sync: build
 	mkdir -p dist/
 	cp wrc-pacenote-mod.exe dist/
