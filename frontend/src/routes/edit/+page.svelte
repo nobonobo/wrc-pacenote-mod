@@ -120,6 +120,7 @@
           content: r.content,
           contentEditable: true,
         });
+        saved = true;
       });
     });
     submit = async (ev) => {
@@ -175,27 +176,31 @@
   }
   async function keyDown(ev) {
     console.log("key:", ev.keyCode);
-    if (ev.keyCode == 13) {
-      ev.preventDefault();
-      if (activeRegion == null || !isEditting()) {
-        await fetch("/api/speech", {
-          method: "POST",
-          Headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text: activeRegion.content.innerText }),
-        });
+    if (ev.keyCode == 27) {
+      if (activeRegion != null) activeRegion.content.blur();
+    } else if (ev.keyCode == 13) {
+      if (activeRegion != null) {
+        if (isEditting()) {
+          activeRegion.content.blur();
+        } else {
+          ev.preventDefault();
+          await fetch("/api/speech", {
+            method: "POST",
+            Headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: activeRegion.content.innerText }),
+          });
+        }
       }
-    }
-    if (ev.keyCode == 32) {
-      ev.preventDefault(); // cancel browser scrolling
+    } else if (ev.keyCode == 32) {
       if (activeRegion == null || !isEditting()) {
+        ev.preventDefault(); // cancel browser scrolling
         ws.playPause();
       }
-    }
-    if (activeRegion && ev.keyCode == 46) {
-      if (!isEditting()) {
+    } else if (ev.keyCode == 46) {
+      if (activeRegion && !isEditting()) {
         ws.pause();
         activeRegion.remove();
         activeRegion = null;
