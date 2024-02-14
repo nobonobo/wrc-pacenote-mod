@@ -98,7 +98,7 @@ func makeAudioQuery(s nanoda.Synthesizer, text string) (nanoda.AudioQuery, error
 	q.VolumeScale = Volume
 	q.PrePhonemeLength = PrePhonemeLength
 	q.PostPhonemeLength = PostPhonemeLength
-	for _, p := range q.AccentPhrases {
+	for _, p := range q.AccentPhrases[1:] {
 		if p.PauseMora != nil {
 			p.PauseMora.VowelLength *= Pause
 		}

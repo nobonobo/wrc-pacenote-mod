@@ -53,9 +53,8 @@
     ws.on("click", () => {
       console.log("ws clicked");
       if (activeRegion) {
-        activeRegion.setOptions({ contentEditable: false });
-        activeRegion.setContent(activeRegion.content);
-        activeRegion.setOptions({ contentEditable: true });
+        activeRegion.setOptions({ color: "rgba(255, 0, 0, 0.1)" });
+        activeRegion.content.blur();
         activeRegion = null;
       }
     });
@@ -80,8 +79,13 @@
 
       wsRegions.on("region-clicked", (region, e) => {
         e.stopPropagation(); // prevent triggering a click on the waveform
-        console.log("clicked");
+        if (activeRegion) {
+          activeRegion.setOptions({ color: "rgba(255, 0, 0, 0.1)" });
+          if (region != activeRegion) activeRegion.content.blur();
+        }
         activeRegion = region;
+        if (activeRegion)
+          activeRegion.setOptions({ color: "rgba(0, 255, 0, 0.1)" });
       });
       wsRegions.on("region-double-clicked", (region, e) => {
         e.stopPropagation(); // prevent triggering a click on the waveform
@@ -100,22 +104,23 @@
           }
         }
       });
-      data.regions.filter((r) => {
-        let region = wsRegions.addRegion({
-          start: r.start,
-          end: r.end,
-          content: r.content,
-          contentEditable: false,
-        });
-        region.setContent(r.content);
-        region.setOptions({ contentEditable: true });
-      });
       let modified = () => {
         saved = false;
       };
       wsRegions.on("region-created", modified);
       wsRegions.on("region-updated", modified);
       wsRegions.on("region-removed", modified);
+    });
+    ws.on("ready", () => {
+      data.regions.filter((r) => {
+        let region = wsRegions.addRegion({
+          start: r.start,
+          end: r.end,
+          color: "rgba(255, 0, 0, 0.1)",
+          content: r.content,
+          contentEditable: true,
+        });
+      });
     });
     submit = async (ev) => {
       let res = [];
@@ -168,16 +173,30 @@
   function isEditting() {
     return getEditting() != null;
   }
-  function keyUp(ev) {
+  async function keyDown(ev) {
     console.log("key:", ev.keyCode);
     if (ev.keyCode == 13) {
+      ev.preventDefault();
+      if (activeRegion == null || !isEditting()) {
+        await fetch("/api/speech", {
+          method: "POST",
+          Headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: activeRegion.content.innerText }),
+        });
+      }
+    }
+    if (ev.keyCode == 32) {
+      ev.preventDefault(); // cancel browser scrolling
       if (activeRegion == null || !isEditting()) {
         ws.playPause();
       }
     }
     if (activeRegion && ev.keyCode == 46) {
       if (!isEditting()) {
-        ws.stop();
+        ws.pause();
         activeRegion.remove();
         activeRegion = null;
       }
@@ -191,7 +210,7 @@
   }
 </script>
 
-<svelte:window on:keyup={keyUp} on:beforeunload={beforeUnload} />
+<svelte:window on:keydown={keyDown} on:beforeunload={beforeUnload} />
 <svelte:head>
   <title>{data.stage}</title>
 </svelte:head>
@@ -221,7 +240,7 @@
     <div class="flex-none h-8">
       <button
         class="btn variant-soft-primary"
-        disabled={submit == null}
+        disabled={submit == null || saved}
         on:click={submit}>Save</button
       >
     </div>

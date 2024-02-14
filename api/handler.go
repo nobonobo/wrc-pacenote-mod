@@ -394,10 +394,35 @@ func mapgen(w http.ResponseWriter, r *http.Request) {
 	canvas.End()
 }
 
-func Setup(ctx context.Context) {
+type SpeechRequest struct {
+	Text string `json:"text"`
+}
+
+func speech(speechCh chan<- string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		var req SpeechRequest
+		if err := json.NewDecoder(io.TeeReader(r.Body, os.Stderr)).Decode(&req); err != nil {
+			log.Print(err)
+			b, _ := json.Marshal(Result{false, err.Error()})
+			http.Error(w, string(b), http.StatusBadRequest)
+			return
+		}
+		log.Printf("speech request: %X", []byte(req.Text))
+		speechCh <- req.Text
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(Result{true, "はろー"})
+	})
+}
+
+func Setup(ctx context.Context, speechCh chan<- string) {
 	mux := http.NewServeMux()
 	http.Handle("/api/", http.StripPrefix("/api", mux))
 	mux.Handle("/hello", http.HandlerFunc(hello))
+	mux.Handle("/speech", speech(speechCh))
 	mux.Handle("/locations", http.HandlerFunc(locations))
 	mux.Handle("/stage/", http.StripPrefix("/stage", http.HandlerFunc(stageName)))
 	mux.Handle("/files/", http.StripPrefix("/files", http.HandlerFunc(files)))

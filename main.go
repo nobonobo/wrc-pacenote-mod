@@ -110,10 +110,9 @@ func logging(speechCh chan<- string) func(context.Context, *easportswrc.PacketEA
 			lastDistance = pkt.StageCurrentDistance
 			setFinished(isFinished(lastPacket))
 		}()
-		if pkt.PacketUid%500 == 0 {
-			log.Printf("packet: %v", pkt)
-		}
 		if lastDistance != 0.0 && pkt.StageCurrentDistance == 0 {
+			defer log.Printf("packet: %v", pkt)
+
 			finishCnt = 0
 			setFinished(false)
 			if closer != nil {
@@ -136,6 +135,7 @@ func logging(speechCh chan<- string) func(context.Context, *easportswrc.PacketEA
 				if getFinished() {
 					os.WriteFile(logName, logFile.Bytes(), 0o644)
 					log.Printf("log saved: %q", logName)
+					log.Printf("packet: %v", pkt)
 				} else {
 					log.Print("log save skiiped")
 				}
@@ -414,7 +414,7 @@ func urlLog(h http.Handler) http.Handler {
 	})
 }
 
-func serve(ctx context.Context) error {
+func serve(ctx context.Context, speechCh chan<- string) error {
 	setup(ctx)
 	l, err := net.Listen("tcp", config.Config.WebListen)
 	if err != nil {
@@ -422,7 +422,7 @@ func serve(ctx context.Context) error {
 	}
 	defer l.Close()
 	server := &http.Server{Handler: urlLog(http.DefaultServeMux)}
-	api.Setup(ctx)
+	api.Setup(ctx, speechCh)
 	log.Println("http listening start:", config.Config.WebListen)
 	defer log.Println("http listener terminated:", config.Config.WebListen)
 	go func() {
@@ -463,7 +463,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := serve(ctx); err != nil {
+		if err := serve(ctx, speechCh); err != nil {
 			log.Print(err)
 		}
 	}()
