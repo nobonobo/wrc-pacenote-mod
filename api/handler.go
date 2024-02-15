@@ -405,16 +405,16 @@ func speech(speechCh chan<- string) http.Handler {
 			return
 		}
 		var req SpeechRequest
-		if err := json.NewDecoder(io.TeeReader(r.Body, os.Stderr)).Decode(&req); err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Print(err)
 			b, _ := json.Marshal(Result{false, err.Error()})
 			http.Error(w, string(b), http.StatusBadRequest)
 			return
 		}
-		log.Printf("speech request: %X", []byte(req.Text))
+		log.Printf("speech request: %q", req.Text)
 		speechCh <- req.Text
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(Result{true, "はろー"})
+		json.NewEncoder(w).Encode(Result{true, ""})
 	})
 }
 

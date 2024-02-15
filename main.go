@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -28,6 +29,12 @@ import (
 	"github.com/nobonobo/wrc-pacenote-mod/easportswrc"
 	"github.com/nobonobo/wrc-pacenote-mod/ttsengine"
 )
+
+var offset = float64(10)
+
+func init() {
+	flag.Float64Var(&offset, "offset", offset, "A high value causes pacenote call to start early.")
+}
 
 func getLogDir(stageLength float64) string {
 	stage := easportswrc.GetStage(stageLength)
@@ -219,20 +226,80 @@ type Pacenote struct {
 }
 
 func (p *Pacenote) Distance(pkt *easportswrc.PacketEASportsWRC) float64 {
+	x := float64(pkt.VehiclePositionX)
+	y := float64(pkt.VehiclePositionY)
+	z := float64(pkt.VehiclePositionZ)
+	// 進行方向速度ベクトル分を加算(200Km/h時で約1m/s)
+	x += offset * float64(pkt.VehicleVelocityX*pkt.GameDeltaTime)
+	y += offset * float64(pkt.VehicleVelocityY*pkt.GameDeltaTime)
+	z += offset * float64(pkt.VehicleVelocityZ*pkt.GameDeltaTime)
 	return math.Sqrt(
-		math.Pow(p.X-float64(pkt.VehiclePositionX), 2) +
-			math.Pow(p.Y-float64(pkt.VehiclePositionY), 2) +
-			math.Pow(p.Z-float64(pkt.VehiclePositionZ), 2),
+		math.Pow(p.X-x, 2) +
+			math.Pow(p.Y-y, 2) +
+			math.Pow(p.Z-z, 2),
 	)
 }
 
-func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEASportsWRC) error {
+func pacenoteFinder(plist []*Pacenote) func(*easportswrc.PacketEASportsWRC) *Pacenote {
+	first := true
 	lastIndex := 0
+	lastDist := float64(0)
+	return func(pkt *easportswrc.PacketEASportsWRC) *Pacenote {
+		if lastIndex < 0 {
+			return nil
+		}
+		min := float64(100000)
+		if first {
+			first = false
+			idx := 0
+			for i, v := range plist {
+				d := v.Distance(pkt)
+				if d < min {
+					min = d
+					idx = i
+				}
+			}
+			lastIndex = idx
+			return nil
+		}
+		if lastIndex >= len(plist) {
+			lastIndex = -1
+			log.Println("pacenotes is eof")
+			return nil
+		}
+		v := plist[lastIndex]
+		next := (*Pacenote)(nil)
+		if len(plist) > lastIndex+1 {
+			next = plist[lastIndex+1]
+		}
+		d := v.Distance(pkt)
+		defer func() {
+			lastDist = d
+		}()
+		if d > 10 {
+			if next != nil && next.Distance(pkt) < d {
+				lastIndex++
+				return nil
+			}
+			return nil
+		}
+		// 10m以下の時
+		// 近づいてる間はスルー
+		if lastDist >= d {
+			return nil
+		}
+		// 離れたら検出
+		lastIndex++
+		return v
+	}
+}
+
+func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEASportsWRC) error {
 	pacenotes := []*Pacenote{}
 	lastDistance := 0.0
 	lastStageLength := -1.0
 	pacenoteInvalid := false
-	cnt := 0
+	var findPacenote func(*easportswrc.PacketEASportsWRC) *Pacenote
 	return func(ctx context.Context, pkt *easportswrc.PacketEASportsWRC) error {
 		if lastDistance != 0 && pkt.StageCurrentDistance == 0 {
 			log.Println("reload pacenote")
@@ -242,7 +309,6 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 		}
 		if lastStageLength != pkt.StageLength {
 			pacenotes = []*Pacenote{}
-			lastIndex = 0
 			lastStageLength = pkt.StageLength
 		}
 		if len(pacenotes) == 0 && !pacenoteInvalid {
@@ -253,6 +319,7 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 				pacenoteInvalid = true
 				return err
 			}
+			stageDict := ttsengine.NewDict()
 			log.Printf("pacenote loading start: %q", fpath)
 			scanner := bufio.NewScanner(fp)
 			pacenotes = []*Pacenote{}
@@ -262,6 +329,7 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 					continue
 				}
 				message := strings.Join(fields[3:], " ")
+				stageDict.Add(message)
 				x, err := strconv.ParseFloat(fields[0], 64)
 				if err != nil {
 					log.Println(err)
@@ -284,30 +352,19 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 			}
 			fp.Close()
 			log.Println("pacenote loading completed")
-			// Skipping
-			for i, r := range pacenotes {
-				if r.Distance(pkt) < 100 {
-					lastIndex = i
-					break
-				}
-			}
+			findPacenote = pacenoteFinder(pacenotes)
+			findPacenote(pkt)
+			ttsengine.SetDict(stageDict)
 		}
 		if pkt.StageCurrentDistance == 0 {
 			return nil
 		}
-		cnt++
 		lastDistance = pkt.StageCurrentDistance
-		lastDist = 0
-		for i := lastIndex; i < len(pacenotes); i++ {
-			r := pacenotes[i]
-			dist := r.Distance(pkt)
-			if dist < 10 {
-				log.Println("speech:", r.Message)
-				speechCh <- r.Message
-				lastIndex = i + 1
-				break
-			}
-			lastDist = dist
+		p := findPacenote(pkt)
+		if p != nil {
+			log.Println("speech:", p.Message)
+			speechCh <- p.Message
+		}
 		return nil
 	}
 }

@@ -111,7 +111,10 @@ func playback(ctxOto *oto.Context, s nanoda.Synthesizer, q nanoda.AudioQuery) er
 	return nil
 }
 
-var dictionary = map[string]nanoda.AudioQuery{}
+var (
+	dictionary  = map[string]nanoda.AudioQuery{}
+	synthesizer nanoda.Synthesizer
+)
 
 func StartEngine(ctx context.Context, ctxOto *oto.Context, in <-chan string) error {
 	v, err := nanoda.NewVoicevox(
@@ -125,6 +128,8 @@ func StartEngine(ctx context.Context, ctxOto *oto.Context, in <-chan string) err
 	if err != nil {
 		return err
 	}
+	defer s.Close()
+	synthesizer = s
 	if err := s.LoadModelsFromStyleId(nanoda.StyleId(ActorID)); err != nil {
 		return err
 	}
@@ -144,7 +149,12 @@ func StartEngine(ctx context.Context, ctxOto *oto.Context, in <-chan string) err
 				if v == "unknown" {
 					continue
 				}
-				qm, ok := dictionary[v]
+				var qm nanoda.AudioQuery
+				var ok bool
+				qm, ok = dictionary[v]
+				if !ok {
+					qm, ok = stageDict[v]
+				}
 				if !ok {
 					q, err := makeAudioQuery(s, v)
 					if err != nil {
