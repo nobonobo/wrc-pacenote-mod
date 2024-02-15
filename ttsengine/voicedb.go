@@ -16,9 +16,9 @@ var (
 	ActorID           = 3
 	Pitch             = 0.0
 	Intnation         = 1.0
-	Speed             = 1.5
+	Speed             = 1.4
 	Volume            = 1.8
-	Pause             = 0.25
+	Pause             = 0.1
 	PrePhonemeLength  = 0.0
 	PostPhonemeLength = 0.0
 )
@@ -42,12 +42,35 @@ type AQ struct {
 	Volume    float64 `json:"volume"`
 }
 
+type AudioDict map[string]nanoda.AudioQuery
+
 var (
-	Dict map[string]AQ
+	Dict      map[string]AQ
+	stageDict = NewDict()
 )
 
 //go:embed base.json
 var base []byte
+
+func NewDict() AudioDict {
+	return map[string]nanoda.AudioQuery{}
+}
+
+func (d AudioDict) Add(s string) {
+	if _, ok := d[s]; ok {
+		return
+	}
+	q, err := makeAudioQuery(synthesizer, s)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	d[s] = q
+}
+
+func SetDict(d AudioDict) {
+	stageDict = d
+}
 
 func writeDictionary(dstName string) error {
 	os.MkdirAll(filepath.Dir(dstName), 0777)
