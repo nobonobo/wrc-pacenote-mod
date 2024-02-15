@@ -18,7 +18,7 @@ var (
 	Intnation         = 1.0
 	Speed             = 1.4
 	Volume            = 1.8
-	Pause             = 0.18
+	Pause             = 0.1
 	PrePhonemeLength  = 0.0
 	PostPhonemeLength = 0.0
 )
