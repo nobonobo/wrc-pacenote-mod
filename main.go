@@ -13,14 +13,12 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/deltammo/octree"
 	"github.com/ebitengine/oto/v3"
 	"github.com/moutend/go-wav"
 
@@ -214,20 +212,23 @@ func logging(speechCh chan<- string) func(context.Context, *easportswrc.PacketEA
 }
 
 type Pacenote struct {
-	ID      int     `json:"id"`
 	Message string  `json:"message"`
 	X       float64 `json:"x"`
 	Y       float64 `json:"y"`
 	Z       float64 `json:"z"`
 }
 
-func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEASportsWRC) error {
-	const (
-		size = 100000
-		half = size / 2
+func (p *Pacenote) Distance(pkt *easportswrc.PacketEASportsWRC) float64 {
+	return math.Sqrt(
+		math.Pow(p.X-float64(pkt.VehiclePositionX), 2) +
+			math.Pow(p.Y-float64(pkt.VehiclePositionY), 2) +
+			math.Pow(p.Z-float64(pkt.VehiclePositionZ), 2),
 	)
-	sparseDB := (*octree.Octree)(nil)
-	lastIndex := -1
+}
+
+func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEASportsWRC) error {
+	lastIndex := 0
+	pacenotes := []*Pacenote{}
 	lastDistance := 0.0
 	lastStageLength := -1.0
 	pacenoteInvalid := false
@@ -240,11 +241,11 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 			pacenoteInvalid = false
 		}
 		if lastStageLength != pkt.StageLength {
-			sparseDB = nil
-			lastIndex = -1
+			pacenotes = []*Pacenote{}
+			lastIndex = 0
 			lastStageLength = pkt.StageLength
 		}
-		if sparseDB == nil && !pacenoteInvalid {
+		if len(pacenotes) == 0 && !pacenoteInvalid {
 			dir := getLogDir(pkt.StageLength)
 			fpath := filepath.Join(dir, "pacenote.log")
 			fp, err := os.Open(fpath)
@@ -253,15 +254,13 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 				return err
 			}
 			log.Printf("pacenote loading start: %q", fpath)
-			tree, err := octree.New(0, 0, 0, size, 8, 0)
-			if err != nil {
-				pacenoteInvalid = true
-				return err
-			}
 			scanner := bufio.NewScanner(fp)
-			index := 1
+			pacenotes = []*Pacenote{}
 			for scanner.Scan() {
 				fields := strings.Split(scanner.Text(), ",")
+				if len(fields) < 3 {
+					continue
+				}
 				message := strings.Join(fields[3:], " ")
 				x, err := strconv.ParseFloat(fields[0], 64)
 				if err != nil {
@@ -278,59 +277,37 @@ func normal(speechCh chan<- string) func(context.Context, *easportswrc.PacketEAS
 					log.Println(err)
 					continue
 				}
-				if err := tree.Set(&Pacenote{
-					ID: index, Message: message,
-					X: x, Y: y, Z: z,
-				}, x+half, y+half, z+half); err != nil {
-					log.Println(err)
-					continue
-				}
-				index++
+				pacenotes = append(pacenotes, &Pacenote{
+					Message: message,
+					X:       x, Y: y, Z: z,
+				})
 			}
 			fp.Close()
-			sparseDB = tree
 			log.Println("pacenote loading completed")
+			// Skipping
+			for i, r := range pacenotes {
+				if r.Distance(pkt) < 100 {
+					lastIndex = i
+					break
+				}
+			}
 		}
 		if pkt.StageCurrentDistance == 0 {
 			return nil
 		}
 		cnt++
-		x := float64(pkt.VehiclePositionX)
-		y := float64(pkt.VehiclePositionY)
-		z := float64(pkt.VehiclePositionZ)
 		lastDistance = pkt.StageCurrentDistance
-		searchDist := 100.0
-		if lastIndex < 0 {
-			searchDist = 10
-		}
-		find := sparseDB.FindSlice(x+half, y+half, z+half, searchDist) // dist under 100m
-		if len(find) == 0 {
-			return nil
-		}
-		records := make([]*Pacenote, 0, len(find))
-		for _, v := range find {
-			records = append(records, v.(*Pacenote))
-		}
-		sort.Slice(records, func(i, j int) bool {
-			return records[i].ID < records[j].ID
-		})
-		for {
-			if records[0].ID > lastIndex {
+		lastDist = 0
+		for i := lastIndex; i < len(pacenotes); i++ {
+			r := pacenotes[i]
+			dist := r.Distance(pkt)
+			if dist < 10 {
+				log.Println("speech:", r.Message)
+				speechCh <- r.Message
+				lastIndex = i + 1
 				break
 			}
-			records = records[1:]
-			if len(records) == 0 {
-				return nil
-			}
-		}
-		r := records[0]
-		dx, dy, dz := x-r.X, y-r.Y, z-r.Z
-		dist := math.Sqrt(dx*dx + dy*dy + dz*dz)
-		if dist < 10 {
-			log.Println("speech:", r.Message)
-			speechCh <- r.Message
-			lastIndex = r.ID
-		}
+			lastDist = dist
 		return nil
 	}
 }
